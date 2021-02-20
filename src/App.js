@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import {
   BrowserRouter as Router,
-  Switch, Route, Link, useParams
+  Switch, Route, Link, useParams, useHistory
 } from "react-router-dom"
 
 const Menu = () => {
@@ -52,20 +52,33 @@ const Footer = () => (
   </div>
 )
 
-const CreateNew = (props) => {
+let timeoutId
+
+const CreateNew = ({ addNew, setNotification }) => {
   const [content, setContent] = useState('')
   const [author, setAuthor] = useState('')
   const [info, setInfo] = useState('')
-
+  const history = useHistory()
 
   const handleSubmit = (e) => {
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+    }
+
     e.preventDefault()
-    props.addNew({
+    addNew({
       content,
       author,
       info,
       votes: 0
     })
+
+    setNotification(content)
+    timeoutId = setTimeout(() => {
+      setNotification('')
+    }, 10000);
+
+    history.push('/')
   }
 
   return (
@@ -100,15 +113,26 @@ const Anecdote = ({ anecdoteById }) => {
       <ul>
         <li> has {anecdote.votes} votes</li>
         <li>for more info see <a
-            href={anecdote.info}
-            target='_blank' rel="noopener noreferrer">
-            {anecdote.info}
-          </a>
+          href={anecdote.info}
+          target='_blank' rel="noopener noreferrer">
+          {anecdote.info}
+        </a>
         </li>
       </ul>
     </div>
   )
 }
+
+const Notification = ({ notification }) => (
+  <div>
+    {
+      notification
+        ? <span>a new anecdote: {notification} created! </span>
+        : null
+    }
+  </div>
+)
+
 
 const App = () => {
   const [anecdotes, setAnecdotes] = useState([
@@ -154,12 +178,13 @@ const App = () => {
       <h1>Software anecdotes</h1>
       <Router>
         <Menu />
+        <Notification notification={notification} />
         <Switch>
           <Route path="/about">
             <About />
           </Route>
           <Route path="/create">
-            <CreateNew addNew={addNew} />
+            <CreateNew addNew={addNew} setNotification={setNotification} />
           </Route>
           <Route path="/anecdotes/:id">
             <Anecdote anecdoteById={anecdoteById} />
