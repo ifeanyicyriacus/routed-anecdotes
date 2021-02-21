@@ -3,6 +3,7 @@ import {
   BrowserRouter as Router,
   Switch, Route, Link, useParams, useHistory
 } from "react-router-dom"
+import { useField } from './hooks/index'
 
 const Menu = () => {
   const padding = {
@@ -52,58 +53,6 @@ const Footer = () => (
   </div>
 )
 
-let timeoutId
-
-const CreateNew = ({ addNew, setNotification }) => {
-  const [content, setContent] = useState('')
-  const [author, setAuthor] = useState('')
-  const [info, setInfo] = useState('')
-  const history = useHistory()
-
-  const handleSubmit = (e) => {
-    if (timeoutId) {
-      clearTimeout(timeoutId)
-    }
-
-    e.preventDefault()
-    addNew({
-      content,
-      author,
-      info,
-      votes: 0
-    })
-
-    setNotification(content)
-    timeoutId = setTimeout(() => {
-      setNotification('')
-    }, 10000);
-
-    history.push('/')
-  }
-
-  return (
-    <div>
-      <h2>create a new anecdote</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          content
-          <input name='content' value={content} onChange={(e) => setContent(e.target.value)} />
-        </div>
-        <div>
-          author
-          <input name='author' value={author} onChange={(e) => setAuthor(e.target.value)} />
-        </div>
-        <div>
-          url for more info
-          <input name='info' value={info} onChange={(e) => setInfo(e.target.value)} />
-        </div>
-        <button>create</button>
-      </form>
-    </div>
-  )
-
-}
-
 const Anecdote = ({ anecdoteById }) => {
   const id = useParams().id
   const anecdote = anecdoteById(id)
@@ -133,6 +82,67 @@ const Notification = ({ notification }) => (
   </div>
 )
 
+let timeoutId
+const CreateNew = ({ addNew, setNotification }) => {
+  const content = useField('text')
+  const author = useField('text')
+  const info = useField('text')
+  const history = useHistory()
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+    }
+
+    addNew({
+      content,
+      author,
+      info,
+      votes: 0
+    })
+
+    setNotification(content)
+    timeoutId = setTimeout(() => {
+      setNotification('')
+    }, 10000);
+
+    history.push('/')
+  }
+
+  const handleReset = (e) => {
+    e.preventDefault()
+    content.onReset()
+    author.onReset()
+    info.onReset()
+  }
+
+  return (
+    <div>
+      <h2>create a new anecdote</h2>
+      <form onSubmit={handleSubmit} onReset={handleReset}>
+        <div>
+          content
+          <input name='content' {...content} />
+        </div>
+        <div>
+          author
+          <input name='author' {...author} />
+        </div>
+        <div>
+          url for more info
+          <input name='info' {...info} />
+        </div>
+        <button>create</button>
+        <button type='reset'>reset</button>
+
+        {content.value}-----{author.value}++++++{info.value}
+      </form>
+    </div>
+  )
+
+}
 
 const App = () => {
   const [anecdotes, setAnecdotes] = useState([
@@ -151,7 +161,6 @@ const App = () => {
       id: '2'
     }
   ])
-
   const [notification, setNotification] = useState('')
 
   const addNew = (anecdote) => {
@@ -162,6 +171,7 @@ const App = () => {
   const anecdoteById = (id) =>
     anecdotes.find(a => a.id === id)
 
+  // eslint-disable-next-line no-unused-vars
   const vote = (id) => {
     const anecdote = anecdoteById(id)
 
