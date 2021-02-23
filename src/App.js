@@ -96,14 +96,15 @@ const CreateNew = ({ addNew, setNotification }) => {
       clearTimeout(timeoutId)
     }
 
+    console.log(content.value)
     addNew({
-      content,
-      author,
-      info,
+      content: content.value,
+      author: author.value,
+      info: info.value,
       votes: 0
     })
 
-    setNotification(content)
+    setNotification(content.value)
     timeoutId = setTimeout(() => {
       setNotification('')
     }, 10000);
